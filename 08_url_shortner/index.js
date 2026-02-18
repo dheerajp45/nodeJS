@@ -1,9 +1,13 @@
 const express = require("express")
 const path = require("path")
+const cookieParser = require("cookie-parser")
 const {connectToMongoDB} = require("./connect")
+const {restrictToLoggedInUserOnly,checkAuth} = require("./middlewares/auth")
+const URL = require("./models/url")
+
 const urlRoute = require("./routes/url")
 const staticRoute =require("./routes/staticRouter")
-const URL = require("./models/url")
+const userRoute = require("./routes/user")
 const app = express()
 const PORT = 8000;
 connectToMongoDB("mongodb://localhost:27017/short_URL").then(()=>console.log("mongo connect done!!"))
@@ -11,8 +15,12 @@ app.set("view engine","ejs");
 app.set("views",path.resolve("./views"))
 app.use(express.json());
 app.use(express.urlencoded({extended:false}));
-app.use("/url",urlRoute);
-app.use("/",staticRoute)
+app.use(cookieParser())
+
+
+app.use("/url",restrictToLoggedInUserOnly,urlRoute);
+app.use("/user",userRoute)
+app.use("/",checkAuth,staticRoute)
 
 
 
